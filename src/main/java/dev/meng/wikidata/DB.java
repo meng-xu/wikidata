@@ -5,6 +5,7 @@
  */
 package dev.meng.wikidata;
 
+import dev.meng.wikidata.fileusage.db.FileusageDB;
 import dev.meng.wikidata.lib.db.DBException;
 import dev.meng.wikidata.lib.db.SQLDB;
 import dev.meng.wikidata.lib.log.LogLevel;
@@ -12,8 +13,8 @@ import dev.meng.wikidata.lib.log.LogOutput;
 import dev.meng.wikidata.lib.log.Loggable;
 import dev.meng.wikidata.lib.log.Logger;
 import dev.meng.wikidata.pagecount.db.PagecountDB;
-import dev.meng.wikidata.metadata.db.MetadataDB;
 import dev.meng.wikidata.pageview.db.PageviewDB;
+import dev.meng.wikidata.revision.db.RevisionDB;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -30,7 +31,8 @@ public class DB {
     
     public static final PagecountDB PAGECOUNT = loadPagecountDB();
     public static final PageviewDB PAGEVIEW = loadPageviewDB();
-    public static final MetadataDB METADATA = loadMetadataDB();
+    public static final FileusageDB FILEUSAGE = loadFileusageDB();
+    public static final RevisionDB REVISION = loadRevisionDB();
     
     public static PagecountDB loadPagecountDB(){
         try {
@@ -56,14 +58,26 @@ public class DB {
         }
     }
     
-    public static MetadataDB loadMetadataDB(){
+    public static FileusageDB loadFileusageDB(){
         try {
-            MetadataDB db = new MetadataDB(Configure.METADATA.DB_LOCATION);
+            FileusageDB db = new FileusageDB(Configure.FILEUSAGE.DB_LOCATION);
             list.put(db.name(), db);
-            Logger.log(DB.class, LogLevel.INFO, Configure.METADATA.DB_LOCATION+" loaded");
+            Logger.log(DB.class, LogLevel.INFO, Configure.FILEUSAGE.DB_LOCATION+" loaded");
             return db;
         } catch (DBException ex) {
-            Logger.log(DB.class, LogLevel.ERROR, "unable to load "+Configure.METADATA.DB_LOCATION, ex);
+            Logger.log(DB.class, LogLevel.ERROR, "unable to load "+Configure.FILEUSAGE.DB_LOCATION, ex);
+            return null;
+        }
+    }
+   
+    public static RevisionDB loadRevisionDB(){
+        try {
+            RevisionDB db = new RevisionDB(Configure.REVISION.DB_LOCATION);
+            list.put(db.name(), db);
+            Logger.log(DB.class, LogLevel.INFO, Configure.REVISION.DB_LOCATION+" loaded");
+            return db;
+        } catch (DBException ex) {
+            Logger.log(DB.class, LogLevel.ERROR, "unable to load "+Configure.REVISION.DB_LOCATION, ex);
             return null;
         }
     }

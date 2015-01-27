@@ -96,6 +96,8 @@ public class Parser {
                             }
                             summaryRecord.put(Summary.FREQUENCY, (long) summaryRecord.get(Summary.FREQUENCY) + frequency);
                             summaryRecord.put(Summary.SIZE, (long) summaryRecord.get(Summary.SIZE) + size);
+                            
+                            summary.put(lang, summaryRecord);
                         }
                     } catch (NoSuchElementException ex) {
                         Logger.log(this.getClass(), LogLevel.WARNING, "Unrecognized line: " + line);
@@ -105,13 +107,7 @@ public class Parser {
                 DB.PAGECOUNT.SUMMARY.insertOrIgnoreBatch(new LinkedList<>(summary.values()));
                 DB.PAGECOUNT.PAGE.insertOrIgnoreBatch(pageRecords);
 
-                List<Map<Page, Object>> updatedPageRecords = DB.PAGECOUNT.PAGE.retrieveAll();
-
-                Map<String, Map<Page, Object>> updatedPageRecordMap = new HashMap<>();
-
-                for (Map<Page, Object> updatedPageRecord : updatedPageRecords) {
-                    updatedPageRecordMap.put(updatedPageRecord.get(Page.LANG) + "/" + updatedPageRecord.get(Page.TITLE), updatedPageRecord);
-                }
+                Map<String, Map<Page, Object>> updatedPageRecordMap = DB.PAGECOUNT.PAGE.retrieveRecordsByUnique(pageRecords);
 
                 for (Map<View, Object> viewRecord : viewRecords) {
                     Map<Page, Object> pageRecord = (Map<Page, Object>) viewRecord.get(View.PAGE_ID);

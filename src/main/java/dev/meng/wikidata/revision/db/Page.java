@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package dev.meng.wikidata.pageview.db;
+package dev.meng.wikidata.revision.db;
 
 import dev.meng.wikidata.lib.db.SQLColumnAttribute;
 import dev.meng.wikidata.lib.db.SQLDataType;
@@ -13,15 +13,20 @@ import dev.meng.wikidata.lib.db.SQLTableDefinition;
  *
  * @author xumeng
  */
-public enum Processing implements SQLTableDefinition{
+public enum Page implements SQLTableDefinition{
     
-    TIMESTAMP(SQLDataType.LONG, new SQLColumnAttribute[]{SQLColumnAttribute.PRIMARY_KEY}),
-    PROCESSING(SQLDataType.LONG, new SQLColumnAttribute[]{SQLColumnAttribute.PRIMARY_KEY});
+    ID(SQLDataType.INTEGER, new SQLColumnAttribute[]{SQLColumnAttribute.PRIMARY_KEY}),
+    LANG(SQLDataType.TEXT, new SQLColumnAttribute[]{SQLColumnAttribute.UNIQUE}),
+    PAGE_ID(SQLDataType.TEXT, new SQLColumnAttribute[]{SQLColumnAttribute.UNIQUE}),
+    TITLE(SQLDataType.TEXT, new SQLColumnAttribute[]{}),
+    LAST_REV_ID(SQLDataType.TEXT, new SQLColumnAttribute[]{}),
+    SIZE(SQLDataType.LONG, new SQLColumnAttribute[]{}),
+    PROCESSING(SQLDataType.LONG, new SQLColumnAttribute[]{});
 
     private SQLDataType type;
     private SQLColumnAttribute[] attributes;
     
-    private Processing(SQLDataType type, SQLColumnAttribute[] attributes){
+    private Page(SQLDataType type, SQLColumnAttribute[] attributes){
         this.type = type;
         this.attributes = attributes;
     }

@@ -36,6 +36,27 @@ public class PageTable extends SQLTable{
         return result;
     }
     
+    public Map<String, Map<Page, Object>> retrieveRecordsByUnique (List<Map<Page, Object>> records) throws SQLException{
+        Map<String, Map<Page, Object>> map = new HashMap<>();
+        
+        for(Map<Page, Object> record : records){
+            Map<Page, Object> criteria = new HashMap<>();
+            criteria.put(Page.LANG, record.get(Page.LANG));
+            criteria.put(Page.TITLE, record.get(Page.TITLE));
+            
+            List<Map<Page, Object>> result = this.select(new Page[]{Page.LANG, Page.TITLE, Page.ID}, criteria);
+            
+            if(result.size()==1){
+                Map<Page, Object> updatedRecord = result.get(0);
+                map.put(updatedRecord.get(Page.LANG) + "/" + updatedRecord.get(Page.TITLE), updatedRecord);
+            } else{
+                throw new SQLException("Unable to retrieve by unique column with record: "+record.toString());
+            }
+        }
+        
+        return map;
+    }
+    
     public List<Map<Page, Object>> retrieveAll() throws SQLException{
         Map<Page, Object> criteria = new HashMap<>();
         return this.select(new Page[]{Page.ID, Page.LANG, Page.TITLE}, criteria);

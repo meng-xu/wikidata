@@ -12,16 +12,15 @@ import dev.meng.wikidata.lib.config.PropertiesBasedConfig;
  *
  * @author xumeng
  */
-public class MetadataConfig extends PropertiesBasedConfig{
+public class RevisionConfig extends PropertiesBasedConfig{
 
     public String API_ENDPOINT;
-    public int REQUEST_LENGTH_MAX;
-    public String TIMESTAMP_FORMAT;
     public String DEFAULT_ENCODING;
+    public String TIMESTAMP_FORMAT;
     public String DB_LOCATION;
     public String LOG_DIRECTORY;
     
-    public MetadataConfig(String filename) throws ConfigException {
+    public RevisionConfig(String filename) throws ConfigException {
         super(filename);
     }
     

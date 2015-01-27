@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package dev.meng.wikidata.metadata.db;
+package dev.meng.wikidata.fileusage.db;
 
 import dev.meng.wikidata.lib.db.SQLColumnAttribute;
 import dev.meng.wikidata.lib.db.SQLDataType;
@@ -13,15 +13,17 @@ import dev.meng.wikidata.lib.db.SQLTableDefinition;
  *
  * @author xumeng
  */
-public enum PageFile implements SQLTableDefinition{
+public enum File implements SQLTableDefinition{
     
-    PAGE_ID(SQLDataType.INTEGER, new SQLColumnAttribute[]{SQLColumnAttribute.PRIMARY_KEY}),
-    FILE_ID(SQLDataType.INTEGER, new SQLColumnAttribute[]{SQLColumnAttribute.PRIMARY_KEY});
+    ID(SQLDataType.INTEGER, new SQLColumnAttribute[]{SQLColumnAttribute.PRIMARY_KEY}),
+    LANG(SQLDataType.TEXT, new SQLColumnAttribute[]{SQLColumnAttribute.UNIQUE}),
+    TITLE(SQLDataType.TEXT, new SQLColumnAttribute[]{SQLColumnAttribute.UNIQUE}),
+    SIZE(SQLDataType.LONG, new SQLColumnAttribute[]{});
 
     private SQLDataType type;
     private SQLColumnAttribute[] attributes;
     
-    private PageFile(SQLDataType type, SQLColumnAttribute[] attributes){
+    private File(SQLDataType type, SQLColumnAttribute[] attributes){
         this.type = type;
         this.attributes = attributes;
     }

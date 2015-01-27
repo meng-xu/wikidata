@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package dev.meng.wikidata.metadata.db;
+package dev.meng.wikidata.revision.db;
 
 import dev.meng.wikidata.lib.db.SQLColumnAttribute;
 import dev.meng.wikidata.lib.db.SQLDataType;

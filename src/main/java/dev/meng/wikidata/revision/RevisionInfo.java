@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package dev.meng.wikidata.metadata;
+package dev.meng.wikidata.revision;
 
 import java.util.GregorianCalendar;
 

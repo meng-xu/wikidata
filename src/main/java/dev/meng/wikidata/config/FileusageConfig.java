@@ -12,16 +12,14 @@ import dev.meng.wikidata.lib.config.PropertiesBasedConfig;
  *
  * @author xumeng
  */
-public class PageviewConfig extends PropertiesBasedConfig{
-    
+public class FileusageConfig extends PropertiesBasedConfig{
+
     public String API_ENDPOINT;
-    public int REQUEST_LENGTH_MAX;
-    public String TIMESTAMP_FORMAT;
     public String DEFAULT_ENCODING;
     public String DB_LOCATION;
     public String LOG_DIRECTORY;
     
-    public PageviewConfig(String filename) throws ConfigException {
+    public FileusageConfig(String filename) throws ConfigException {
         super(filename);
     }
     

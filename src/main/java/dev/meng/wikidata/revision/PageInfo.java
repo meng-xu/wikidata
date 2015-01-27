@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package dev.meng.wikidata.metadata;
+package dev.meng.wikidata.revision;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -18,11 +18,9 @@ public class PageInfo {
     private String title;
     private String lastRevisionId;
     private long size;
-    private Set<FileInfo> files;
     private Set<RevisionInfo> revisions;
 
     public PageInfo(){
-        files = new HashSet<>();
         revisions = new HashSet<>();
     }
     
@@ -48,14 +46,6 @@ public class PageInfo {
 
     public void setLang(String lang) {
         this.lang = lang;
-    }
-
-    public Set<FileInfo> getFiles() {
-        return files;
-    }
-
-    public void setFiles(Set<FileInfo> files){
-        this.files = files;
     }
     
     public String getLastRevisionId() {

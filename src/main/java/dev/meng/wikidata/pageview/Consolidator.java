@@ -5,22 +5,32 @@
  */
 package dev.meng.wikidata.pageview;
 
+import com.google.common.base.Joiner;
+import dev.meng.wikidata.Configure;
 import dev.meng.wikidata.DB;
 import dev.meng.wikidata.lib.log.LogLevel;
 import dev.meng.wikidata.lib.log.LogOutput;
 import dev.meng.wikidata.lib.log.Loggable;
 import dev.meng.wikidata.lib.log.Logger;
-import dev.meng.wikidata.metadata.Metadata;
 import dev.meng.wikidata.util.string.AsciiToUnicodeFormat;
 import dev.meng.wikidata.util.string.CodecUtils;
 import dev.meng.wikidata.util.string.StringConvertionException;
 import dev.meng.wikidata.pageview.db.Page;
 import dev.meng.wikidata.pageview.db.View;
+import dev.meng.wikidata.util.http.HttpUtils;
+import dev.meng.wikidata.util.string.StringUtils;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  *
@@ -30,8 +40,6 @@ import java.util.Map;
 public class Consolidator {
     
     public void consolidate(){
-        Metadata metadata = new Metadata();
-        
         try {
             List<String> langs = DB.PAGECOUNT.PAGE.retrieveAllLangs();
             
@@ -49,9 +57,6 @@ public class Consolidator {
                     titles.add((String) record.get(dev.meng.wikidata.pagecount.db.Page.TITLE));
                     oldTitleToOldIdMap.put((String)record.get(dev.meng.wikidata.pagecount.db.Page.TITLE), (int) record.get(dev.meng.wikidata.pagecount.db.Page.ID));
                 }
-                
-//                List<String> titles = DB.PAGECOUNT.PAGE.retrieveUnconsolidatedTitlesByLang(lang);
-//                Map<String, Integer> oldTitleToOldIdMap = DB.PAGECOUNT.PAGE.retrieveUnconsolidatedTitleToIdMapByLang(lang);
                 
                 Map<String, List<String>> titleMap = new HashMap<>();
                 for(String title : titles){
@@ -73,7 +78,7 @@ public class Consolidator {
                 
                 List<String> decodedTitles = new LinkedList<>(titleMap.keySet());
                 
-                Map<String, String>[] queryResult = metadata.queryPageIds(lang, decodedTitles);
+                Map<String, String>[] queryResult = queryPageIds(lang, decodedTitles);
                 Map<String, String> norms = queryResult[0];
                 Map<String, String> pageIds = queryResult[1];
                 
@@ -104,8 +109,8 @@ public class Consolidator {
                 
                 DB.PAGEVIEW.PAGE.insertOrIgnoreBatch(newPageRecords);
                 
-                Map<String, Integer> newPageIdToIdMap = DB.PAGEVIEW.PAGE.retrievePageIdToIdMapByLang(lang);
-
+                Map<String, Integer> newPageIdToIdMap = DB.PAGEVIEW.PAGE.retrievePageIdToIdMapByUnique(lang, newPageRecords);
+                
                 List<Map<View, Object>> newViewRecords = new LinkedList<>();
                 
                 for(String newPageId : newPageIdToIdMap.keySet()){
@@ -148,4 +153,116 @@ public class Consolidator {
             Logger.log(this.getClass(), LogLevel.ERROR, ex);
         }
     }
+    
+    private Map<String, String>[] queryPageIds(String lang, List<String> titles){
+        Map<String, String> norm = new HashMap<>();
+        Map<String, String> result = new HashMap<>();
+        
+        int last = 0;
+        int sizeCount = 0;
+
+        for(int current = 0;current<titles.size();current++){
+            String currentString = titles.get(current);
+            sizeCount = sizeCount + currentString.length();
+            if(currentString.contains("|") || currentString.contains("%7C") || currentString.contains("\\x7C") || currentString.length()>Configure.PAGEVIEW.REQUEST_LENGTH_MAX){
+                Map<String, String>[] oneResult = queryPageIdsBatch(lang, titles.subList(last, current));
+                norm.putAll(oneResult[0]);
+                result.putAll(oneResult[1]);
+                
+                last = current+1;
+                sizeCount = 0;
+                
+                norm.put(currentString, currentString);
+                Logger.log(this.getClass(), LogLevel.WARNING, lang+" "+currentString+" invalid for query");
+            } else if(sizeCount>Configure.PAGEVIEW.REQUEST_LENGTH_MAX){
+                Map<String, String>[] oneResult = queryPageIdsBatch(lang, titles.subList(last, current));
+                norm.putAll(oneResult[0]);
+                result.putAll(oneResult[1]);
+                
+                last = current;
+                sizeCount = currentString.length();
+            }
+        }
+        
+        if (last < titles.size()) {
+            Map<String, String>[] oneResult = queryPageIdsBatch(lang, titles.subList(last, titles.size()));
+            norm.putAll(oneResult[0]);
+            result.putAll(oneResult[1]);
+        }
+        
+        return new Map[]{norm, result};
+    }
+    
+    private Map<String, String>[] queryPageIdsBatch(String lang, List<String> titles){
+        if(!titles.isEmpty()){
+            String titleString = Joiner.on("|").join(titles);
+            return queryPageIdsBatchWorker(lang, titleString, null);
+        } else{
+            return new HashMap[]{new HashMap<>(), new HashMap<>()};
+        }
+    }
+    
+    private Map<String, String>[] queryPageIdsBatchWorker(String lang, String titles, String cont){
+        Map<String, Object> params = new HashMap<>();
+        params.put("format", "json");
+        params.put("action", "query");
+        params.put("titles", titles);
+        params.put("prop", "info");
+        if(cont!=null){
+            params.put("incontinue", cont);
+        }
+        
+        Map<String, String> norm = new HashMap<>();
+        Map<String, String> result = new HashMap<>();
+        
+        try {
+            String urlString = String.format(Configure.PAGEVIEW.API_ENDPOINT, lang) + "?" + StringUtils.mapToURLParameters(params, Configure.PAGEVIEW.DEFAULT_ENCODING);            
+            URL url = new URL(urlString);
+
+            JSONObject response = HttpUtils.queryForJSONResponse(url, Configure.FILEUSAGE.DEFAULT_ENCODING);
+            
+            if(response!=null && response.has("query")){
+                JSONObject responseQuery = response.getJSONObject("query");
+                if(responseQuery.has("normalized")){
+                    JSONArray normalizations = responseQuery.getJSONArray("normalized");
+                    for(int i=0;i<normalizations.length();i++){
+                        JSONObject normalization = normalizations.getJSONObject(i);
+                        norm.put(normalization.getString("from"), normalization.getString("to"));
+                    }
+                }
+                if(responseQuery.has("pages")){
+                    JSONObject pages = responseQuery.getJSONObject("pages");
+                    for(String pageKey : (Set<String>)pages.keySet()){
+                        if(Long.parseLong(pageKey)>0){
+                            JSONObject page = pages.getJSONObject(pageKey);
+                            if(page.has("ns") && page.getLong("ns")==0L){
+                                result.put(page.getString("title"), Long.toString(page.getLong("pageid")));
+                            }
+                        }
+                    }
+                }
+
+                String queryContinue = null;
+                if (response.has("query-continue")) {
+                    queryContinue = response.getJSONObject("query-continue").getJSONObject("info").getString("incontinue");
+                }
+
+                if (queryContinue != null) {
+                    Map<String, String>[] moreResult = queryPageIdsBatchWorker(lang, titles, queryContinue);
+                    norm.putAll(moreResult[0]);
+                    result.putAll(moreResult[1]);
+                }
+            }
+        } catch (UnsupportedEncodingException ex) {
+            Logger.log(this.getClass(), LogLevel.WARNING, "Error in encoding: "+params.toString()+", "+ex.getMessage());
+        } catch (MalformedURLException ex) {
+            Logger.log(this.getClass(), LogLevel.ERROR, ex);
+        } catch (IOException ex) {
+            Logger.log(this.getClass(), LogLevel.ERROR, ex);
+        } catch (StringConvertionException ex) {
+            Logger.log(this.getClass(), LogLevel.ERROR, ex);
+        }
+
+        return new Map[]{norm, result};
+    }    
 }

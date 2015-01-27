@@ -302,4 +302,34 @@ public class SQLTable<T extends SQLTableDefinition> {
 
         return list;
     }
+    
+    public void delete(Map<T, Object> criteria) throws SQLException {
+        Set<T> keys = criteria.keySet();
+        Iterator<T> iterator = keys.iterator();
+
+        String[] clauses = new String[keys.size()];
+
+        for (int i = 0; i < clauses.length; i++) {
+            clauses[i] = iterator.next() + "=?";
+        }
+
+        String sql = "DELETE FROM " + name;
+        if (!criteria.isEmpty()) {
+            sql = sql + " WHERE " + Joiner.on(" AND ").join(clauses);
+        }
+
+        PreparedStatement statement = connection.prepareStatement(sql);
+
+        Collection<Object> objs = criteria.values();
+        Iterator<Object> iterator2 = objs.iterator();
+
+        for (int i = 1; i <= objs.size(); i++) {
+            statement.setObject(i, iterator2.next());
+        }
+
+        statement.executeUpdate();
+
+        connection.commit();
+    }    
+    
 }

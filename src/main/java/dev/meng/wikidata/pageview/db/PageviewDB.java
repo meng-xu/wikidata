@@ -20,8 +20,6 @@ public class PageviewDB extends SQLDB{
 
     public PageTable PAGE;
     public ViewTable VIEW;
-    public SummaryTable SUMMARY;
-    public ProcessingTable PROCESSING;
     
     public PageviewDB(String filename) throws DBException {
         super(filename);
@@ -30,19 +28,16 @@ public class PageviewDB extends SQLDB{
         this.tables.add(PAGE);
         
         VIEW = new ViewTable(this.connection);
-        this.tables.add(VIEW);     
-        
-        SUMMARY = new SummaryTable(this.connection);
-        this.tables.add(SUMMARY);      
-        
-        PROCESSING = new ProcessingTable(this.connection);
-        this.tables.add(PROCESSING);
+        this.tables.add(VIEW);          
     }    
     
     public List<Map<String, Object>> getTopViewsByLangAndTimestamp(String lang, GregorianCalendar start, GregorianCalendar end, int limit) throws SQLException{
-        String sql = "SELECT page.LANG, page.PAGE_ID, page.TITLE, sum(view.FREQUENCY) as FREQUENCY_SUM, sum(view.SIZE) as SIZE_SUM FROM view INNER JOIN page ON view.PAGE_ID=page.ID WHERE page.LANG=? AND view.TIMESTAMP>=? AND view.TIMESTAMP<=? GROUP BY view.PAGE_ID ORDER BY FREQUENCY_SUM DESC LIMIT ?";
-        
-        return select(sql, lang, start.getTimeInMillis(), end.getTimeInMillis(), limit);
+        if(limit==-1){
+            String sql = "SELECT page.LANG, page.PAGE_ID, page.TITLE, sum(view.FREQUENCY) as FREQUENCY_SUM, sum(view.SIZE) as SIZE_SUM FROM view INNER JOIN page ON view.PAGE_ID=page.ID WHERE page.LANG=? AND view.TIMESTAMP>=? AND view.TIMESTAMP<=? GROUP BY view.PAGE_ID ORDER BY FREQUENCY_SUM DESC";
+            return select(sql, lang, start.getTimeInMillis(), end.getTimeInMillis());
+        } else{
+            String sql = "SELECT page.LANG, page.PAGE_ID, page.TITLE, sum(view.FREQUENCY) as FREQUENCY_SUM, sum(view.SIZE) as SIZE_SUM FROM view INNER JOIN page ON view.PAGE_ID=page.ID WHERE page.LANG=? AND view.TIMESTAMP>=? AND view.TIMESTAMP<=? GROUP BY view.PAGE_ID ORDER BY FREQUENCY_SUM DESC LIMIT ?";
+            return select(sql, lang, start.getTimeInMillis(), end.getTimeInMillis(), limit);
+        }
     }        
-    
 }

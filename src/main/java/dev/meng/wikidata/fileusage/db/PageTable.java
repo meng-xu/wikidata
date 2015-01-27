@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package dev.meng.wikidata.metadata.db;
+package dev.meng.wikidata.fileusage.db;
 
 import dev.meng.wikidata.lib.db.SQLTable;
 import java.sql.Connection;
@@ -54,4 +54,25 @@ public class PageTable extends SQLTable{
         Map<Page, Object> criteria = new HashMap<>();
         return this.select(new Page[]{Page.ID, Page.LANG, Page.PAGE_ID}, criteria);
     }
+    
+    public Map<String, Map<Page, Object>> retrieveUniqueToRecordMap (List<Map<Page, Object>> records) throws SQLException{
+        Map<String, Map<Page, Object>> map = new HashMap<>();
+        
+        for(Map<Page, Object> record : records){
+            Map<Page, Object> criteria = new HashMap<>();
+            criteria.put(Page.LANG, record.get(Page.LANG));
+            criteria.put(Page.PAGE_ID, record.get(Page.PAGE_ID));
+            
+            List<Map<Page, Object>> result = this.select(new Page[]{Page.LANG, Page.PAGE_ID, Page.ID}, criteria);
+            
+            if(result.size()==1){
+                Map<Page, Object> updatedRecord = result.get(0);
+                map.put(updatedRecord.get(Page.LANG) + "/" + updatedRecord.get(Page.PAGE_ID), updatedRecord);
+            } else{
+                throw new SQLException("Unable to retrieve by unique column with record: "+record.toString());
+            }
+        }
+        
+        return map;
+    }        
 }

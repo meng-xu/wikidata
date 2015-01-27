@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package dev.meng.wikidata.metadata.db;
+package dev.meng.wikidata.fileusage.db;
 
 import dev.meng.wikidata.lib.db.SQLColumnAttribute;
 import dev.meng.wikidata.lib.db.SQLDataType;
@@ -20,7 +20,8 @@ public enum Page implements SQLTableDefinition{
     PAGE_ID(SQLDataType.TEXT, new SQLColumnAttribute[]{SQLColumnAttribute.UNIQUE}),
     TITLE(SQLDataType.TEXT, new SQLColumnAttribute[]{}),
     LAST_REV_ID(SQLDataType.TEXT, new SQLColumnAttribute[]{}),
-    SIZE(SQLDataType.LONG, new SQLColumnAttribute[]{});
+    SIZE(SQLDataType.LONG, new SQLColumnAttribute[]{}),
+    PROCESSING(SQLDataType.LONG, new SQLColumnAttribute[]{});
 
     private SQLDataType type;
     private SQLColumnAttribute[] attributes;

@@ -5,9 +5,10 @@
  */
 package dev.meng.wikidata;
 
-import dev.meng.wikidata.config.MetadataConfig;
+import dev.meng.wikidata.config.FileusageConfig;
 import dev.meng.wikidata.config.PagecountConfig;
 import dev.meng.wikidata.config.PageviewConfig;
+import dev.meng.wikidata.config.RevisionConfig;
 import dev.meng.wikidata.lib.config.ConfigException;
 import dev.meng.wikidata.lib.log.LogLevel;
 import dev.meng.wikidata.lib.log.LogOutput;
@@ -22,7 +23,8 @@ import dev.meng.wikidata.lib.log.Logger;
 public class Configure {
     public static final PagecountConfig PAGECOUNT = loadPagecountConfig();
     public static final PageviewConfig PAGEVIEW = loadPageviewConfig();
-    public static final MetadataConfig METADATA = loadMetadataConfig();
+    public static final FileusageConfig FILEUSAGE = loadFileusageConfig();
+    public static final RevisionConfig REVISION = loadRevisionConfig();
     
     private static PagecountConfig loadPagecountConfig() {
         try {
@@ -46,14 +48,25 @@ public class Configure {
         }
     }
     
-    private static MetadataConfig loadMetadataConfig() {
+    private static FileusageConfig loadFileusageConfig() {
         try {
-            MetadataConfig config = new MetadataConfig("config/metadata.properties");
-            Logger.log(Configure.class, LogLevel.INFO, "metadata config loaded");
+            FileusageConfig config = new FileusageConfig("config/fileusage.properties");
+            Logger.log(Configure.class, LogLevel.INFO, "fileusage config loaded");
             return config;
         } catch (ConfigException ex) {
-            Logger.log(Configure.class, LogLevel.ERROR, "unable to load metadata config", ex);
+            Logger.log(Configure.class, LogLevel.ERROR, "unable to load fileusage config", ex);
             return null;
         }
-    }    
+    } 
+    
+    private static RevisionConfig loadRevisionConfig() {
+        try {
+            RevisionConfig config = new RevisionConfig("config/revision.properties");
+            Logger.log(Configure.class, LogLevel.INFO, "revision config loaded");
+            return config;
+        } catch (ConfigException ex) {
+            Logger.log(Configure.class, LogLevel.ERROR, "unable to load revision config", ex);
+            return null;
+        }
+    }      
 }

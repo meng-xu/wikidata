@@ -5,6 +5,7 @@
  */
 package dev.meng.wikidata;
 
+import dev.meng.wikidata.analyze.Analyzer;
 import dev.meng.wikidata.lib.db.SQLDB;
 import dev.meng.wikidata.lib.log.LogLevel;
 import dev.meng.wikidata.lib.log.LogOutput;
@@ -80,10 +81,31 @@ public class Main {
         consolidator.consolidate();
     }
     
+    public static void analyze(){
+        try {
+            Analyzer analyzer = new Analyzer();
+            
+            Scanner input = new Scanner(System.in);
+            System.out.print("Lang: ");
+            String lang = input.next();
+            System.out.print("Start timestamp (format " + Configure.PAGECOUNT.TIMESTAMP_FORMAT + "): ");
+            GregorianCalendar start = StringUtils.parseTimestamp(input.next(), Configure.PAGECOUNT.TIMESTAMP_FORMAT);
+            System.out.print("End timestamp (format " + Configure.PAGECOUNT.TIMESTAMP_FORMAT + "): ");
+            GregorianCalendar end = StringUtils.parseTimestamp(input.next(), Configure.PAGECOUNT.TIMESTAMP_FORMAT);
+            System.out.print("Limit: ");
+            int limit = Integer.parseInt(input.next());
+            
+            analyzer.analyzeFileusage(lang, start, end, limit);
+            analyzer.analyzeRevision(lang, start, end, limit);
+        } catch (ParseException ex) {
+            Logger.log(Main.class, LogLevel.ERROR, ex);
+        }
+    }
+    
     public static void main(String[] args){
         Scanner input = new Scanner(System.in);
         while(true){
-            System.out.print("Command (init, download, parse, consolidate, analyze, clean, exit): ");
+            System.out.print("Command (init, download, parse, consolidate, analyze, exit): ");
             String command = input.next();
             switch(command){
                 case "init":
@@ -98,12 +120,9 @@ public class Main {
                 case "consolidate":
                     consolidate();
                     break;
-//                case "analyze":
-//                    analyze();
-//                    break;
-//                case "clean":
-//                    clean();
-//                    break;
+                case "analyze":
+                    analyze();
+                    break;
                 case "exit":
                     System.exit(0);
                     break;
