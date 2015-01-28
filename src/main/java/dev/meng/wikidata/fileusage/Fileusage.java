@@ -5,6 +5,7 @@
  */
 package dev.meng.wikidata.fileusage;
 
+import com.google.common.base.Joiner;
 import dev.meng.wikidata.Configure;
 import dev.meng.wikidata.DB;
 import dev.meng.wikidata.fileusage.db.File;
@@ -49,17 +50,29 @@ public class Fileusage {
        
     public void queryFileusage(Set<PageInfo> pages){
         try {
+            Logger.log(this.getClass(), LogLevel.INFO, "retrieving page info and file list");
+            int progress = 0;
             for(PageInfo page : pages){
                 storePage(page);
                 queryPageInfo(page.getLang(), page.getPageId(), page);
                 queryFileList(page.getLang(), page.getPageId(), page);
+                progress++;
+                if (progress % 100 == 0) {
+                    Logger.log(this.getClass(), LogLevel.INFO, "retrieving page info and file list: "+((double)progress)/pages.size());
+                }
             }
             Set<FileInfo> fileSet = new HashSet<>();
             for(String lang : files.keySet()){
                 fileSet.addAll(files.get(lang).values());
             }
+            Logger.log(this.getClass(), LogLevel.INFO, "retrieving file info");
+            progress = 0;
             for(FileInfo file : fileSet){
                 queryFileInfo(file.getLang(), file.getTitle(), file);
+                progress++;
+                if (progress % 100 == 0) {
+                    Logger.log(this.getClass(), LogLevel.INFO, "retrieving file info: "+((double)progress)/fileSet.size());
+                }                
             }
             
             List<Map<Page, Object>> pageRecords = new LinkedList<>();
@@ -218,6 +231,42 @@ public class Fileusage {
             Logger.log(this.getClass(), LogLevel.ERROR, ex);
         }
     }
+    
+    
+    private void queryPageInfoBatch(String lang, Map<String, PageInfo> pages){
+        Map<String, Object> params = new HashMap<>();
+        params.put("format", "json");
+        params.put("action", "query");
+        params.put("pageids", Joiner.on("|").join(pages.keySet()));
+        params.put("prop", "info");
+        try {
+            String urlString = String.format(Configure.FILEUSAGE.API_ENDPOINT, lang) + "?" + StringUtils.mapToURLParameters(params, Configure.FILEUSAGE.DEFAULT_ENCODING);
+            URL url = new URL(urlString);
+
+            JSONObject response = HttpUtils.queryForJSONResponse(url, Configure.FILEUSAGE.DEFAULT_ENCODING);
+            try {
+                JSONObject pageInfos = response.getJSONObject("query").getJSONObject("pages");
+                for(String pageId : pages.keySet()){
+                    JSONObject pageInfo = pageInfos.getJSONObject(pageId);
+                    PageInfo page = pages.get(pageId);
+                    page.setTitle(pageInfo.getString("title"));
+                    page.setSize(pageInfo.getLong("length"));
+                    page.setLastRevisionId(Long.toString(pageInfo.getLong("lastrevid")));
+                }
+            } catch (JSONException ex) {
+                Logger.log(this.getClass(), LogLevel.WARNING, "Error in response: " + urlString + ", " + response.toString() + ", " + ex.getMessage());
+            }
+
+        } catch (UnsupportedEncodingException ex) {
+            Logger.log(this.getClass(), LogLevel.WARNING, "Error in encoding: " + params.toString() + ", " + ex.getMessage());
+        } catch (MalformedURLException ex) {
+            Logger.log(this.getClass(), LogLevel.ERROR, ex);
+        } catch (IOException ex) {
+            Logger.log(this.getClass(), LogLevel.ERROR, ex);
+        } catch (StringConvertionException ex) {
+            Logger.log(this.getClass(), LogLevel.ERROR, ex);
+        }
+    }    
     
     private List<Map<String, Object>> queryFileListWorker(String lang, String pageId, String cont){
         Map<String, Object> params = new HashMap<>();

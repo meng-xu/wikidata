@@ -15,6 +15,7 @@ import dev.meng.wikidata.pagecount.Downloader;
 import dev.meng.wikidata.pagecount.Parser;
 import dev.meng.wikidata.util.string.StringUtils;
 import dev.meng.wikidata.pageview.Consolidator;
+import dev.meng.wikidata.simulation.Simulator;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.GregorianCalendar;
@@ -86,17 +87,72 @@ public class Main {
             Analyzer analyzer = new Analyzer();
             
             Scanner input = new Scanner(System.in);
+            System.out.print("Type (frequency, fileusage, revision): ");
+            String type = input.next();
+            
+            String lang;
+            GregorianCalendar start;
+            GregorianCalendar end;
+            GregorianCalendar revStart;
+            GregorianCalendar revEnd;
+            int limit;
+            
+            switch(type){
+                case "fileusage":
+                    System.out.print("Lang: ");
+                    lang = input.next();
+                    System.out.print("Start timestamp (format " + Configure.PAGECOUNT.TIMESTAMP_FORMAT + "): ");
+                    start = StringUtils.parseTimestamp(input.next(), Configure.PAGECOUNT.TIMESTAMP_FORMAT);
+                    System.out.print("End timestamp (format " + Configure.PAGECOUNT.TIMESTAMP_FORMAT + "): ");
+                    end = StringUtils.parseTimestamp(input.next(), Configure.PAGECOUNT.TIMESTAMP_FORMAT);
+                    System.out.print("Limit: ");
+                    limit = Integer.parseInt(input.next());
+                    analyzer.analyzeFileusage(lang, start, end, limit);
+                    break;
+                case "revision":
+                    System.out.print("Lang: ");
+                    lang = input.next();
+                    System.out.print("Start timestamp (format " + Configure.PAGECOUNT.TIMESTAMP_FORMAT + "): ");
+                    start = StringUtils.parseTimestamp(input.next(), Configure.PAGECOUNT.TIMESTAMP_FORMAT);
+                    System.out.print("End timestamp (format " + Configure.PAGECOUNT.TIMESTAMP_FORMAT + "): ");
+                    end = StringUtils.parseTimestamp(input.next(), Configure.PAGECOUNT.TIMESTAMP_FORMAT);
+                    System.out.print("Limit: ");
+                    limit = Integer.parseInt(input.next());
+                    System.out.print("Revision start timestamp (format " + Configure.PAGECOUNT.TIMESTAMP_FORMAT + "): ");
+                    revStart = StringUtils.parseTimestamp(input.next(), Configure.PAGECOUNT.TIMESTAMP_FORMAT);
+                    System.out.print("Revision end timestamp (format " + Configure.PAGECOUNT.TIMESTAMP_FORMAT + "): ");
+                    revEnd = StringUtils.parseTimestamp(input.next(), Configure.PAGECOUNT.TIMESTAMP_FORMAT);                    
+                    analyzer.analyzeRevision(lang, start, end, limit, revStart, revEnd);
+                    break;
+                case "frequency":
+                    System.out.print("Lang: ");
+                    lang = input.next();
+                    System.out.print("Start timestamp (format " + Configure.PAGECOUNT.TIMESTAMP_FORMAT + "): ");
+                    start = StringUtils.parseTimestamp(input.next(), Configure.PAGECOUNT.TIMESTAMP_FORMAT);
+                    System.out.print("End timestamp (format " + Configure.PAGECOUNT.TIMESTAMP_FORMAT + "): ");
+                    end = StringUtils.parseTimestamp(input.next(), Configure.PAGECOUNT.TIMESTAMP_FORMAT);
+                    System.out.print("Limit: ");
+                    limit = Integer.parseInt(input.next());
+                    System.out.println("Total frequency of selected pages: "+analyzer.analyzeTopFrequency(lang, start, end, limit));
+                    System.out.println("Total frequency of all pages: "+analyzer.analyzeTotalFrequency(lang, start, end));
+                    break;                    
+            }
+        } catch (ParseException ex) {
+            Logger.log(Main.class, LogLevel.ERROR, ex);
+        }
+    }
+    
+    public static void simulate(){
+        try {
+            Simulator simulator = new Simulator();
+            Scanner input = new Scanner(System.in);
             System.out.print("Lang: ");
             String lang = input.next();
             System.out.print("Start timestamp (format " + Configure.PAGECOUNT.TIMESTAMP_FORMAT + "): ");
             GregorianCalendar start = StringUtils.parseTimestamp(input.next(), Configure.PAGECOUNT.TIMESTAMP_FORMAT);
             System.out.print("End timestamp (format " + Configure.PAGECOUNT.TIMESTAMP_FORMAT + "): ");
             GregorianCalendar end = StringUtils.parseTimestamp(input.next(), Configure.PAGECOUNT.TIMESTAMP_FORMAT);
-            System.out.print("Limit: ");
-            int limit = Integer.parseInt(input.next());
-            
-            analyzer.analyzeFileusage(lang, start, end, limit);
-            analyzer.analyzeRevision(lang, start, end, limit);
+            simulator.simulate(lang, start, end);
         } catch (ParseException ex) {
             Logger.log(Main.class, LogLevel.ERROR, ex);
         }
@@ -105,7 +161,7 @@ public class Main {
     public static void main(String[] args){
         Scanner input = new Scanner(System.in);
         while(true){
-            System.out.print("Command (init, download, parse, consolidate, analyze, exit): ");
+            System.out.print("Command (init, download, parse, consolidate, analyze, simulate, exit): ");
             String command = input.next();
             switch(command){
                 case "init":
@@ -123,6 +179,9 @@ public class Main {
                 case "analyze":
                     analyze();
                     break;
+                case "simulate":
+                    simulate();
+                    break;                    
                 case "exit":
                     System.exit(0);
                     break;

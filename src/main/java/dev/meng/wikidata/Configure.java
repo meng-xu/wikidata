@@ -9,6 +9,7 @@ import dev.meng.wikidata.config.FileusageConfig;
 import dev.meng.wikidata.config.PagecountConfig;
 import dev.meng.wikidata.config.PageviewConfig;
 import dev.meng.wikidata.config.RevisionConfig;
+import dev.meng.wikidata.config.SimulationConfig;
 import dev.meng.wikidata.lib.config.ConfigException;
 import dev.meng.wikidata.lib.log.LogLevel;
 import dev.meng.wikidata.lib.log.LogOutput;
@@ -25,6 +26,7 @@ public class Configure {
     public static final PageviewConfig PAGEVIEW = loadPageviewConfig();
     public static final FileusageConfig FILEUSAGE = loadFileusageConfig();
     public static final RevisionConfig REVISION = loadRevisionConfig();
+    public static final SimulationConfig SIMULATION = loadSimulationConfig();
     
     private static PagecountConfig loadPagecountConfig() {
         try {
@@ -68,5 +70,16 @@ public class Configure {
             Logger.log(Configure.class, LogLevel.ERROR, "unable to load revision config", ex);
             return null;
         }
-    }      
+    }   
+    
+    private static SimulationConfig loadSimulationConfig() {
+        try {
+            SimulationConfig config = new SimulationConfig("config/simulation.properties");
+            Logger.log(Configure.class, LogLevel.INFO, "simulation config loaded");
+            return config;
+        } catch (ConfigException ex) {
+            Logger.log(Configure.class, LogLevel.ERROR, "unable to load simulation config", ex);
+            return null;
+        }
+    }     
 }

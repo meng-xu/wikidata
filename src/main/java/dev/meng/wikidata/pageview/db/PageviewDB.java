@@ -39,5 +39,16 @@ public class PageviewDB extends SQLDB{
             String sql = "SELECT page.LANG, page.PAGE_ID, page.TITLE, sum(view.FREQUENCY) as FREQUENCY_SUM, sum(view.SIZE) as SIZE_SUM FROM view INNER JOIN page ON view.PAGE_ID=page.ID WHERE page.LANG=? AND view.TIMESTAMP>=? AND view.TIMESTAMP<=? GROUP BY view.PAGE_ID ORDER BY FREQUENCY_SUM DESC LIMIT ?";
             return select(sql, lang, start.getTimeInMillis(), end.getTimeInMillis(), limit);
         }
-    }        
+    }
+
+    public List<Map<String, Object>> getAllRecordsByLangAndTimestamp(String lang, GregorianCalendar timestamp) throws SQLException {
+        String sql = "SELECT page.LANG, page.PAGE_ID, view.FREQUENCY FROM view INNER JOIN page ON view.PAGE_ID=page.ID WHERE page.LANG=? AND view.TIMESTAMP=?";
+        return select(sql, lang, timestamp.getTimeInMillis());
+    }
+
+    public long getTotalFrequency(String lang, GregorianCalendar start, GregorianCalendar end) throws SQLException {
+        String sql = "SELECT sum(view.FREQUENCY) as FREQUENCY_SUM FROM view INNER JOIN page ON view.PAGE_ID=page.ID WHERE page.LANG=? AND view.TIMESTAMP>=? AND view.TIMESTAMP<=?";
+        List<Map<String, Object>> result = select(sql, lang, start.getTimeInMillis(), end.getTimeInMillis());
+        return ((Number)result.get(0).get("FREQUENCY_SUM")).longValue();
+    }
 }

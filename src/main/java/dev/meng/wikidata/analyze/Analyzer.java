@@ -25,6 +25,7 @@ import java.util.Set;
  */
 @Loggable(output=LogOutput.FILE)
 public class Analyzer {
+    
     public void analyzeFileusage(String lang, GregorianCalendar start, GregorianCalendar end, int limit){
         try {
             List<Map<String, Object>> records = DB.PAGEVIEW.getTopViewsByLangAndTimestamp(lang, start, end, limit);
@@ -44,7 +45,7 @@ public class Analyzer {
             Logger.log(this.getClass(), LogLevel.ERROR, ex);
         }
     }
-    public void analyzeRevision(String lang, GregorianCalendar start, GregorianCalendar end, int limit){
+    public void analyzeRevision(String lang, GregorianCalendar start, GregorianCalendar end, int limit, GregorianCalendar revStart, GregorianCalendar revEnd){
         try {
             List<Map<String, Object>> records = DB.PAGEVIEW.getTopViewsByLangAndTimestamp(lang, start, end, limit);
             
@@ -57,10 +58,35 @@ public class Analyzer {
             }
             
             RevisionHistory revision = new RevisionHistory();
-            revision.queryRevisions(pages, start, end);
+            revision.queryRevisions(pages, revStart, revEnd);
             
         } catch (SQLException ex) {
             Logger.log(this.getClass(), LogLevel.ERROR, ex);
         }
     }    
+    
+    public long analyzeTopFrequency(String lang, GregorianCalendar start, GregorianCalendar end, int limit){
+        try {
+            long result = 0L;
+            List<Map<String, Object>> records = DB.PAGEVIEW.getTopViewsByLangAndTimestamp(lang, start, end, limit);
+
+            for(Map<String, Object> record : records){
+                result = result + ((Number)record.get("FREQUENCY_SUM")).longValue();
+            }
+            return result;
+            
+        } catch (SQLException ex) {
+            Logger.log(this.getClass(), LogLevel.ERROR, ex);
+            return -1L;
+        }
+    }
+    
+    public long analyzeTotalFrequency(String lang, GregorianCalendar start, GregorianCalendar end){
+        try {
+            return DB.PAGEVIEW.getTotalFrequency(lang, start, end);
+        } catch (SQLException ex) {
+            Logger.log(this.getClass(), LogLevel.ERROR, ex);
+            return -1L;
+        }
+    }
 }
